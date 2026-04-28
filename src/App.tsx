@@ -64,6 +64,17 @@ export default function App() {
   // Global State
   const state = useFemicState();
 
+  if (state.isLoading) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", theme === 'light' ? 'bg-white' : 'bg-slate-950')}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className={cn("text-sm font-medium", theme === 'light' ? 'text-slate-500' : 'text-slate-400')}>Carregando FEMIC...</p>
+        </div>
+      </div>
+    );
+  }
+
   const isConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!isConfigured) {
