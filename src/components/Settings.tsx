@@ -13,7 +13,7 @@ import {
 import { cn } from '../lib/utils.ts';
 import { useFemicState } from '../hooks/useFemicState.ts';
 import { ServiceMode, HealthInsurance, Service } from '../types.ts';
-import { firebaseService } from '../services/firebaseService.ts';
+import { supabaseService } from '../services/supabaseService.ts';
 
 interface SettingsProps {
   theme: 'light' | 'dark';
@@ -38,13 +38,13 @@ export function Settings({ theme, state }: SettingsProps) {
 
   const handleAddPayer = async () => {
     if (!newPayerName) return;
-    await firebaseService.create('payers', { name: newPayerName, active: true });
+    await supabaseService.create('payers', { name: newPayerName, active: true });
     setNewPayerName('');
   };
 
   const handleAddService = async () => {
     if (!newService.name) return;
-    await firebaseService.create('services', { ...newService, active: true });
+    await supabaseService.create('services', { ...newService, active: true });
     setNewService({
       name: '',
       health_insurance_id: '',
@@ -57,13 +57,13 @@ export function Settings({ theme, state }: SettingsProps) {
 
   const deletePayer = async (id: string) => {
     if (confirm('Excluir este pagador?')) {
-      await firebaseService.delete('payers', id);
+      await supabaseService.delete('payers', id);
     }
   };
 
   const deleteService = async (id: string) => {
     if (confirm('Excluir este serviço?')) {
-      await firebaseService.delete('services', id);
+      await supabaseService.delete('services', id);
     }
   };
 
@@ -82,9 +82,9 @@ export function Settings({ theme, state }: SettingsProps) {
     };
 
     if (state.settings?.id) {
-       await firebaseService.update('settings', state.settings.id, settings);
+       await supabaseService.update('settings', state.settings.id, settings);
     } else {
-       await firebaseService.create('settings', settings);
+       await supabaseService.create('settings', settings);
     }
     alert('Configurações salvas!');
   };

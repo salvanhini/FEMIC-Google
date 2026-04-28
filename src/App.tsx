@@ -43,9 +43,7 @@ import { Settings as SettingsView } from './components/Settings.tsx';
 import { Packages } from './components/Packages.tsx';
 import { Reminders } from './components/Reminders.tsx';
 import { AppointmentModal } from './components/AppointmentModal.tsx';
-import { auth } from './lib/firebase.ts';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-
+import { supabase } from './lib/supabase.ts';
 import { DailyView } from './components/DailyView.tsx';
 
 type Page = 'dashboard' | 'patients' | 'agenda' | 'daily' | 'packages' | 'reminders' | 'documents' | 'analysis' | 'reports' | 'import' | 'backup' | 'settings';
@@ -67,15 +65,26 @@ export default function App() {
   const state = useFemicState();
 
   const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("Login failed:", error);
     }
   };
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const handleOpenApptModal = (date?: string, slot?: string, appt?: any) => {
     setSelectedDate(date);
@@ -312,13 +321,13 @@ export default function App() {
               
               <div className={cn("flex items-center gap-3 pl-6 border-l", theme === 'light' ? "border-slate-200 text-slate-800" : "border-slate-800 text-white")}>
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-black leading-none">{state.user?.displayName || 'Usuário'}</p>
+                  <p className="text-sm font-black leading-none">{state.user?.user_metadata?.full_name || state.user?.user_metadata?.name || 'Usuário'}</p>
                   <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1.5 flex items-center justify-end gap-1">
                     <span className="w-1 h-1 bg-blue-500 rounded-full"></span> FISIO
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-2xl shadow-lg shadow-blue-500/10 overflow-hidden bg-slate-200 shrink-0 border border-white dark:border-slate-800 rotate-3 group hover:rotate-0 transition-transform">
-                  <img src={state.user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${state.user?.email}`} alt="avatar" />
+                  <img src={state.user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${state.user?.email}`} alt="avatar" />
                 </div>
               </div>
             </div>

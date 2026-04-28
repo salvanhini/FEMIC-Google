@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils.ts';
 import { useFemicState } from '../hooks/useFemicState.ts';
-import { firebaseService } from '../services/firebaseService.ts';
+import { supabaseService } from '../services/supabaseService.ts';
 
 interface PackagesProps {
   theme: 'light' | 'dark';
@@ -30,7 +30,7 @@ export function Packages({ theme, state }: PackagesProps) {
 
   const handleAddPackage = async () => {
     if (!newPackage.patient_id || !newPackage.service_id) return;
-    await firebaseService.create('packages', {
+    await supabaseService.create('packages', {
       ...newPackage,
       active: true,
       created_at: new Date().toISOString()
@@ -45,7 +45,7 @@ export function Packages({ theme, state }: PackagesProps) {
 
   const deletePackage = async (id: string) => {
     if (confirm('Remover este pacote?')) {
-      await firebaseService.delete('packages', id);
+      await supabaseService.delete('packages', id);
     }
   };
 

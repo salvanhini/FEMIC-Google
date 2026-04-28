@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { firebaseService, testConnection } from '../services/firebaseService.ts';
-import { auth } from '../lib/firebase.ts';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { supabaseService } from '../services/supabaseService.ts';
+import { supabase } from '../lib/supabase.ts';
+import { User } from '@supabase/supabase-js';
 import { 
   Patient, 
   Appointment, 
@@ -29,16 +29,20 @@ export function useFemicState() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    testConnection();
-    const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (!u) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) {
         setPatients([]);
         setAppointments([]);
-        setIsLoading(false);
       }
     });
-    return () => unsubscribeAuth();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -46,13 +50,15 @@ export function useFemicState() {
 
     setIsLoading(true);
 
-    const unsubPatients = firebaseService.subscribe<Patient>('patients', setPatients);
-    const unsubAppointments = firebaseService.subscribe<Appointment>('appointments', setAppointments);
-    const unsubServices = firebaseService.subscribe<Service>('services', setServices);
-    const unsubPayers = firebaseService.subscribe<HealthInsurance>('payers', setPayers);
-    const unsubAnamneses = firebaseService.subscribe<Anamnese>('anamneses', setAnamneses);
-    const unsubPackages = firebaseService.subscribe<SessionPackage>('packages', setPackages);
-    const unsubSettings = firebaseService.subscribe<ScheduleSettings>('settings', (s) => setSettings(s[0] || null));
+    const unsubPatients = supabaseService.subscribe<Patient>('patients', setPatients);
+    const unsubAppointments = supabaseService.subscribe<Appointment>('appointments', setAppointments);
+    const unsubServices = supabaseService.subscribe<Service>('services', setServices);
+    const unsubPayers = supabaseService.subscribe<HealthInsurance>('payers', setPayers);
+    const unsubAnamneses = supabaseService.subscribe<Anamnese>('anamneses', setAnamneses);
+    const unsubPackages = supabaseService.subscribe<SessionPackage>('packages', setPackages);
+    const unsubSettings = supabaseService.subscribe<ScheduleSettings>('settings', (s) => setSettings(s[0] || null));
+    const unsubEvolutions = supabaseService.subscribe<ClinicalEvolution>('evolutions', setEvolutions);
+    const unsubDocuments = supabaseService.subscribe<PatientDocument>('documents', setDocuments);
 
     setIsLoading(false);
 
@@ -64,16 +70,18 @@ export function useFemicState() {
       unsubAnamneses();
       unsubPackages();
       unsubSettings();
+      unsubEvolutions();
+      unsubDocuments();
     };
   }, [user]);
 
   // Wrapper functions for mutations
-  const addPatient = (patient: Omit<Patient, 'id' | 'userId'>) => firebaseService.create('patients', patient);
-  const updatePatient = (id: string, data: Partial<Patient>) => firebaseService.update('patients', id, data);
-  const deletePatient = (id: string) => firebaseService.delete('patients', id);
+  const addPatient = (patient: Omit<Patient, 'id' | 'userId'>) => supabaseService.create('patients', patient);
+  const updatePatient = (id: string, data: Partial<Patient>) => supabaseService.update('patients', id, data);
+  const deletePatient = (id: string) => supabaseService.delete('patients', id);
 
-  const addAppointment = (appt: Omit<Appointment, 'id' | 'userId' | 'created_at'>) => firebaseService.create('appointments', appt);
-  const deleteAppointment = (id: string) => firebaseService.delete('appointments', id);
+  const addAppointment = (appt: Omit<Appointment, 'id' | 'userId' | 'created_at'>) => supabaseService.create('appointments', appt);
+  const deleteAppointment = (id: string) => supabaseService.delete('appointments', id);
 
   const findPackage = (patientId: string, serviceId: string) => {
     return packages.find(p => p.patient_id === patientId && p.service_id === serviceId && p.active);
@@ -90,10 +98,10 @@ export function useFemicState() {
     if (newStatus === AppointmentStatus.CONCLUIDO && !appt.package_consumed) {
       const pkg = findPackage(appt.patient_id, appt.service_id);
       if (pkg && pkg.remaining_sessions > 0) {
-        await firebaseService.update('packages', pkg.id, {
+        await supabaseService.update('packages', pkg.id, {
           remaining_sessions: pkg.remaining_sessions - 1
         });
-        await firebaseService.update('appointments', appt.id, {
+        await supabaseService.update('appointments', appt.id, {
           status: newStatus,
           package_consumed: true,
           session_package_id: pkg.id
@@ -108,12 +116,12 @@ export function useFemicState() {
       if (pkgId) {
         const pkg = packages.find(p => p.id === pkgId);
         if (pkg) {
-          await firebaseService.update('packages', pkg.id, {
+          await supabaseService.update('packages', pkg.id, {
             remaining_sessions: pkg.remaining_sessions + 1
           });
         }
       }
-      await firebaseService.update('appointments', appt.id, {
+      await supabaseService.update('appointments', appt.id, {
         status: newStatus,
         package_consumed: false,
         session_package_id: null
@@ -122,7 +130,7 @@ export function useFemicState() {
     }
 
     // Standard update
-    await firebaseService.update('appointments', appt.id, { status: newStatus });
+    await supabaseService.update('appointments', appt.id, { status: newStatus });
   };
 
   return {

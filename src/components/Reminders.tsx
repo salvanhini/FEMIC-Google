@@ -15,7 +15,7 @@ import {
 import { cn } from '../lib/utils.ts';
 import { useFemicState } from '../hooks/useFemicState.ts';
 import { AppointmentStatus, Appointment } from '../types.ts';
-import { firebaseService } from '../services/firebaseService.ts';
+import { supabaseService } from '../services/supabaseService.ts';
 
 interface RemindersProps {
   theme: 'light' | 'dark';
@@ -50,12 +50,12 @@ export function Reminders({ theme, state }: RemindersProps) {
     
     // Mark as sent
     if (reminderType === 'appointment') {
-       await firebaseService.update('appointments', appt.id, { 
+       await supabaseService.update('appointments', appt.id, { 
           package_consumed: appt.package_consumed, // keep existing
           appointment_reminder_sent: true 
        });
     } else {
-       await firebaseService.update('appointments', appt.id, { 
+       await supabaseService.update('appointments', appt.id, { 
           package_consumed: appt.package_consumed,
           form_reminder_sent: true 
        });
