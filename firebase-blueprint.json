@@ -1,0 +1,180 @@
+{
+  "entities": {
+    "User": {
+      "title": "Usuário (Fisioterapeuta)",
+      "description": "Perfil do profissional logado no sistema",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["physio", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "Patient": {
+      "title": "Paciente",
+      "description": "Cadastro básico de paciente clínica",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "pathology": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "archived": { "type": "boolean" },
+        "userId": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "whatsapp", "userId", "created_at"]
+    },
+    "Appointment": {
+      "title": "Agendamento",
+      "description": "Sessão marcada na agenda",
+      "type": "object",
+      "properties": {
+        "patient_id": { "type": "string" },
+        "service_id": { "type": "string" },
+        "appointment_date": { "type": "string", "format": "date" },
+        "start_time": { "type": "string" },
+        "end_time": { "type": "string" },
+        "status": { "type": "string" },
+        "userId": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patient_id", "appointment_date", "start_time", "status", "userId"]
+    },
+    "Service": {
+      "title": "Serviço",
+      "description": "Tipo de atendimento oferecido",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "duration_minutes": { "type": "number" },
+        "health_insurance_id": { "type": "string" },
+        "appointment_mode": { "type": "string" },
+        "max_patients": { "type": "number" },
+        "active": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "price", "userId"]
+    },
+    "Payer": {
+      "title": "Pagador/Convênio",
+      "description": "Lista de convênios ou formas de pagamento",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "active": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "userId"]
+    },
+    "Package": {
+      "title": "Pacote de Sessões",
+      "description": "Créditos de sessões para um paciente",
+      "type": "object",
+      "properties": {
+        "patient_id": { "type": "string" },
+        "service_id": { "type": "string" },
+        "total_sessions": { "type": "number" },
+        "remaining_sessions": { "type": "number" },
+        "active": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["patient_id", "service_id", "total_sessions", "userId"]
+    },
+    "Settings": {
+      "title": "Configurações",
+      "description": "Configurações da agenda e clínica",
+      "type": "object",
+      "properties": {
+        "start_time": { "type": "string" },
+        "end_time": { "type": "string" },
+        "slot_interval_minutes": { "type": "number" },
+        "max_patients_per_slot": { "type": "number" },
+        "userId": { "type": "string" }
+      },
+      "required": ["userId"]
+    },
+    "Anamnese": {
+      "title": "Anamnese",
+      "description": "Ficha de avaliação inicial",
+      "type": "object",
+      "properties": {
+        "patient_id": { "type": "string" },
+        "chief_complaint": { "type": "string" },
+        "history": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["patient_id", "userId"]
+    },
+    "Evolution": {
+      "title": "Evolução Clínica",
+      "description": "Registro de evolução do paciente",
+      "type": "object",
+      "properties": {
+        "patient_id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "conduct": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["patient_id", "userId"]
+    },
+    "Document": {
+      "title": "Documento do Paciente",
+      "description": "Anexos e links de documentos",
+      "type": "object",
+      "properties": {
+        "patient_id": { "type": "string" },
+        "title": { "type": "string" },
+        "drive_url": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["patient_id", "drive_url", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Dados do fisioterapeuta"
+    },
+    "/patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Lista de pacientes do profissional"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Agenda do profissional"
+    },
+    "/services/{serviceId}": {
+      "schema": "Service",
+      "description": "Serviços do profissional"
+    },
+    "/payers/{payerId}": {
+      "schema": "Payer",
+      "description": "Convênios aceitos"
+    },
+    "/packages/{packageId}": {
+      "schema": "Package",
+      "description": "Pacotes de sessões"
+    },
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Configurações globais"
+    },
+    "/anamneses/{anamneseId}": {
+      "schema": "Anamnese",
+      "description": "Avaliações clínicas"
+    },
+    "/evolutions/{evolutionId}": {
+      "schema": "Evolution",
+      "description": "Evoluções clínicas"
+    },
+    "/documents/{documentId}": {
+      "schema": "Document",
+      "description": "Documentos anexados"
+    }
+  }
+}
