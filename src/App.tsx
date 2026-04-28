@@ -64,6 +64,29 @@ export default function App() {
   // Global State
   const state = useFemicState();
 
+  const isConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!isConfigured) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center p-6", theme === 'light' ? 'bg-slate-50' : 'bg-slate-950')}>
+        <div className="max-w-md w-full p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-red-100 dark:border-red-900/30 text-center space-y-6">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+            <Cloud size={32} />
+          </div>
+          <h2 className="text-xl font-bold dark:text-white">Configuração Pendente</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            As chaves do <b>Supabase</b> não foram encontradas. <br/><br/>
+            Se você está no GitHub Pages, adicione <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> em <b>Settings &gt; Secrets and Variables &gt; Actions</b>.
+          </p>
+          <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-left text-[10px] font-mono text-slate-400 break-all">
+            URL: {import.meta.env.VITE_SUPABASE_URL ? '✅ OK' : '❌ Faltando'}<br/>
+            Key: {import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ OK' : '❌ Faltando'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
